@@ -1,46 +1,41 @@
 name: Test
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
 
 jobs:
-  linux:
-    env:
-      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-    name: "Node ${{ matrix.node }} on Linux: Test"
+  test-fork:
+    name: "Karma fork emil-todirascu/karma@master (Node 22)"
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node:
-          - 10
-          - 12
-          - 14
-          - 16
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
-      - run: bash run.sh
-  windows:
-    name: "Node ${{ matrix.node }} on Windows: Test"
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      matrix:
-        node:
-          - 10
-          - 12
-          - 14
-          - 16
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+          node-version: "22"
+
+      - uses: browser-actions/setup-firefox@v1
+
+      - name: Checkout Karma fork
+        uses: actions/checkout@v4
         with:
-          node-version: ${{ matrix.node }}
-      - run: bash run.sh
+          repository: emil-todirascu/karma
+          ref: master
+          path: karma-src
+
+      - name: Pack Karma tarball
+        working-directory: karma-src
+        run: |
+          set -euo pipefail
+          npm pack
+          TARBALL="$(ls -1 *.tgz | head -n1)"
+          echo "KARMA_TARBALL=$PWD/$TARBALL" >> "$GITHUB_ENV"
+          echo "Using tarball: $PWD/$TARBALL"
+
+      - name: Run integration tests against fork tarball
+        run: bash run.sh "$KARMA_TARBALL"
