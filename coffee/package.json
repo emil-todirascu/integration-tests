@@ -16,8 +16,5 @@
     "karma-coffee-preprocessor": "latest",
     "karma-firefox-launcher": "latest",
     "karma-jasmine": "latest"
-  },
-  "dependencies": {
-    "coffeescript": "^2.7.0"
   }
 }
