@@ -38,7 +38,7 @@ for DIR in *; do
     echo "=============================================================="
 
     cd ./$DIR
-    npm install > /dev/null || exit 1
+    npm install --include=dev > /dev/null || exit 1
     # Ignore peerdependency issues
     npm install ${PKG_TO_OVERRIDE} || true
     npm test || exit 1
